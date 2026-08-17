@@ -1,0 +1,67 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.egg
+
+# Virtual environments
+env/
+ENV/
+venv/
+.venv/
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+# Ignore specific notebook(s) generated during testing
+Test_API.ipynb
+
+# Python testing / coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Type check / caches
+.mypy_cache/
+.pyre/
+
+# Requests cache used by this project
+.cache/
+.cache.sqlite
+
+# Local environment / secrets
+.env
+.env.*
+secrets.yml
+
+# Database / data files
+*.sqlite3
+*.db
+
+# Project outputs (ignore auto-generated data and logs)
+/current_weather_code.csv
+/hourly_weather_code.csv
+/weather_code.txt
+
+# Notebooks outputs (if you prefer to keep notebooks, remove the *.ipynb line above)
+*.ipynb
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
