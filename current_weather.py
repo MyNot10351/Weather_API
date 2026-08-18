@@ -4,7 +4,7 @@ import pandas as pd
 import requests_cache
 from retry_requests import retry
 from datetime import datetime, timedelta, timezone
-import timezonefinder
+import zoneinfo
 
 # # Setup the Open-Meteo API client with cache and retry on error
 cache_session = requests_cache.CachedSession('.cache', expire_after = 3600)
@@ -41,7 +41,7 @@ current_apparent_temperature = current.Variables(3).Value()
 # print(f"Current relative_humidity_2m: {current_relative_humidity_2m}")
 # print(f"Current weather_code: {current_weather_code}")
 # print(f"Current apparent_temperature: {current_apparent_temperature}")
-time = datetime.fromtimestamp(current.Time(), tz=timezone(timedelta(hours=7)))
+time = datetime.fromtimestamp(current.Time(), tz=zoneinfo.ZoneInfo("Asia/Bangkok")).strftime("%Y-%m-%d %H:%M:%S")
 
 current_dataframe = pd.DataFrame(columns=["time", "temperature_2m", 
                                           "relative_humidity_2m", 
@@ -52,4 +52,4 @@ current_dataframe = pd.DataFrame(columns=["time", "temperature_2m",
                                         current_weather_code, 
                                         current_apparent_temperature]])
 
-current_dataframe.to_csv("current_weather_code.csv", index=False, mode='a', header=False)
+current_dataframe.to_csv("current_weather.csv", index=False, mode='a', header=False)
