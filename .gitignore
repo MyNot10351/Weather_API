@@ -54,9 +54,12 @@ secrets.yml
 *.db
 
 # Project outputs (ignore auto-generated data and logs)
-/current_weather_code.csv
-/hourly_weather_code.csv
-/weather_code.txt
+current_weather_code.csv
+hourly_weather_code.csv
+weather_code.txt
+# Local dataset files (generated or large) - ignore real data
+current_weather.csv
+hourly_weather.csv
 
 # Notebooks outputs (if you prefer to keep notebooks, remove the *.ipynb line above)
 *.ipynb
