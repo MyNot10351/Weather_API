@@ -27,8 +27,7 @@ venv/
 
 # Jupyter
 .ipynb_checkpoints/
-# Ignore specific notebook(s) generated during testing
-Test_API.ipynb
+*.ipynb
 
 # Python testing / coverage
 .pytest_cache/
@@ -47,6 +46,7 @@ htmlcov/
 # Local environment / secrets
 .env
 .env.*
+!.env.example
 secrets.yml
 
 # Database / data files
@@ -57,12 +57,8 @@ secrets.yml
 current_weather_code.csv
 hourly_weather_code.csv
 weather_code.txt
-# Local dataset files (generated or large) - ignore real data
 current_weather.csv
 hourly_weather.csv
-
-# Notebooks outputs (if you prefer to keep notebooks, remove the *.ipynb line above)
-*.ipynb
 
 # OS files
 .DS_Store
