@@ -1,0 +1,4 @@
+openmeteo-requests>=1.7,<2
+pandas>=2.2,<3
+requests-cache>=1.2,<2
+retry-requests>=2.0,<3
