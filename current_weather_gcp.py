@@ -5,6 +5,8 @@ import requests_cache
 from retry_requests import retry
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
+import zoneinfo
+from datetime import datetime, timedelta, timezone
 
 # Load local values from .env; Cloud Run can provide the same values directly.
 load_dotenv()
@@ -16,8 +18,8 @@ LATITUDE = float(os.getenv("WEATHER_LATITUDE", "13.945583"))
 LONGITUDE = float(os.getenv("WEATHER_LONGITUDE", "100.716417"))
 TIMEZONE = os.getenv("WEATHER_TIMEZONE", "auto")
 GCS_OUTPUT_URI = os.getenv(
-    "WEATHER_HOURLY_GCS_OUTPUT_URI",
-    "gs://data-low-cost/Final Data/hourly_weather.parquet",
+    "WEATHER_CURRENT_GCS_OUTPUT_URI",
+    "gs://data-low-cost/Final Data/current_weather.parquet",
 )
 
 # 2. ทำรูท (Route) รองรับ HTTP POST (เหมาะสำหรับให้ Cloud Scheduler มาสั่งรัน)
@@ -33,42 +35,35 @@ def hourly_weather():
         params = {
             "latitude": LATITUDE,
             "longitude": LONGITUDE,
-            "hourly": ["temperature_2m", "relative_humidity_2m", "weather_code", "apparent_temperature"],
+            "current": ["temperature_2m", "relative_humidity_2m", "weather_code", "apparent_temperature"],
             "timezone": TIMEZONE,
         }
         responses = openmeteo.weather_api(url, params = params)
 
         # Process first location.
         response = responses[0]
-        hourly = response.Hourly()
+        current = response.Current()
+        current_temperature_2m = current.Variables(0).Value()
+        current_relative_humidity_2m = current.Variables(1).Value()
+        current_weather_code = current.Variables(2).Value()
+        current_apparent_temperature = current.Variables(3).Value()
         
         # ดึงข้อมูลช่วงเวลา (Time) มาด้วยเพื่อสร้างเป็นคอลัมน์ใน DataFrame
         # Open-Meteo ให้เวลาเป็น Timestamp วินาที ต้องคูณช่วงเวลาตามระยะข้อมูล
-        time_data = pd.date_range(
-            start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
-            end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
-            freq=pd.to_timedelta(hourly.Interval(), unit="s"),
-            inclusive="left"
-        )
+        time = datetime.fromtimestamp(current.Time(), tz=zoneinfo.ZoneInfo("Asia/Bangkok")).strftime("%Y-%m-%d %H:%M:%S")
 
-        hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
-        hourly_relative_humidity_2m = hourly.Variables(1).ValuesAsNumpy()
-        hourly_weather_code = hourly.Variables(2).ValuesAsNumpy()
-        hourly_apparent_temperature = hourly.Variables(3).ValuesAsNumpy()
+        current_dataframe = pd.DataFrame(columns=["time", "temperature_2m", 
+                                          "relative_humidity_2m", 
+                                          "weather_code", 
+                                          "apparent_temperature"], 
+                                 data=[[time, current_temperature_2m, 
+                                        current_relative_humidity_2m, 
+                                        current_weather_code, 
+                                        current_apparent_temperature]])
 
-        # [แก้ไขจุดพัง] ประกาศสร้าง Dictionary เพื่อเก็บข้อมูลก่อนแปลงเป็น DataFrame
-        hourly_data = {
-            "date": time_data,
-            "temperature_2m": hourly_temperature_2m,
-            "relative_humidity_2m": hourly_relative_humidity_2m,
-            "weather_code": hourly_weather_code,
-            "apparent_temperature": hourly_apparent_temperature
-        }
-
-        hourly_dataframe = pd.DataFrame(data = hourly_data)
         
         # บันทึกไฟล์ลง GCS (Cloud Run จะดึงสิทธิ์จากสิทธิ์เครื่องโดยอัตโนมัติในการเขียนลงถัง)
-        hourly_dataframe.to_parquet(GCS_OUTPUT_URI, index=False, engine="pyarrow")
+        current_dataframe.to_parquet(GCS_OUTPUT_URI, index=False, engine="pyarrow")
 
         # ตอบกลับ Cloud Run / Cloud Scheduler ว่าทำเสร็จแล้วสำเร็จ
         return jsonify({"status": "success", "message": "Weather data saved to GCS successfully"}), 200
